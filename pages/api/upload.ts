@@ -1,6 +1,3 @@
-// This is a mock API route for file uploads
-// In a real application, you would handle file uploads, storage, and processing here
-
 import multer from 'multer';
 import { NextApiRequest, NextApiResponse } from 'next';
 import path from 'path';
@@ -36,9 +33,9 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // Helper to handle multer upload
-const runMiddleware = (req, res, fn) => {
+const runMiddleware = (req: NextApiRequest, res: NextApiResponse, fn: any) => {
   return new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
+    fn(req, res, (result: any) => {
       if (result instanceof Error) {
         return reject(result);
       }
@@ -61,7 +58,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await runMiddleware(req, res, upload.single('file'));
 
-    if (!req.file) {
+    const file = (req as any).file;
+    if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
@@ -69,10 +67,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       message: 'File uploaded successfully',
       file: {
-        filename: req.file.filename,
-        path: req.file.path,
-        size: req.file.size,
-        mimetype: req.file.mimetype
+        filename: file.filename,
+        path: file.path,
+        size: file.size,
+        mimetype: file.mimetype
       }
     });
 

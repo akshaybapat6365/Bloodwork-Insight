@@ -18,28 +18,57 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #1a202c; /* dark gray */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #4a5568; /* medium gray */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #718096; /* lighter gray on hover */
 }
 
 /* Custom styles for file upload */
 .dropzone {
-  border: 2px dashed #e2e8f0;
+  border: 2px dashed #4a5568; /* medium gray */
   border-radius: 0.5rem;
   padding: 2rem;
   text-align: center;
   transition: all 0.3s ease;
+  background-color: #2d3748; /* darker background */
 }
 
 .dropzone:hover, .dropzone.active {
+  border-color: #6366f1; /* primary color */
+  background-color: #2a314f; /* subtle primary highlight */
+}
+
+/* Glow effect for focused elements */
+.glow-focus:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+  outline: none;
+}
+
+/* Subtle hover animation */
+.hover-lift {
+  transition: transform 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Subtle card effect */
+.card-dark {
+  background-color: #2d3748;
+  border: 1px solid #4a5568;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.card-dark:hover {
   border-color: #6366f1;
-  background-color: #eef2ff;
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.4);
 } 

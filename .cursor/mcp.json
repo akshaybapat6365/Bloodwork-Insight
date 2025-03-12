@@ -1,14 +1,11 @@
 {
   "mcpServers": {
-    "sample-cli-server": {
+    "cliServer": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-sample"
       ]
-    },
-    "sample-sse-server": {
-      "url": "http://localhost:8765/sse"
     }
   }
-} 
+}

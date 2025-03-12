@@ -1,7 +1,8 @@
 import Layout from '../components/Layout';
 import HeroSection from '../components/HeroSection';
 import StepSection from '../components/StepSection';
-import { FiFileText, FiTrendingUp, FiMessageSquare, FiShield } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiFileText, FiTrendingUp, FiMessageSquare, FiShield, FiUpload } from 'react-icons/fi';
 
 export default function Home() {
   const features = [
@@ -52,13 +53,13 @@ export default function Home() {
       <StepSection />
       
       {/* Features Section */}
-      <div className="bg-white py-12 sm:py-16 lg:py-20">
+      <div className="py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
               Features That Empower You
             </h2>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+            <p className="mt-4 max-w-2xl text-xl text-gray-400 mx-auto">
               Take control of your health with our powerful tools and insights
             </p>
           </div>
@@ -66,16 +67,16 @@ export default function Home() {
           <div className="mt-12">
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {features.map((feature) => (
-                <div key={feature.name} className="pt-6">
-                  <div className="flow-root bg-white rounded-lg shadow-md px-6 pb-8 h-full">
+                <div key={feature.name} className="pt-6 hover-lift">
+                  <div className="flow-root bg-gray-800 rounded-lg border border-gray-700 px-6 pb-8 h-full">
                     <div className="-mt-6">
                       <div>
                         <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
                           <feature.icon className="h-6 w-6 text-white" aria-hidden="true" />
                         </span>
                       </div>
-                      <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">{feature.name}</h3>
-                      <p className="mt-5 text-base text-gray-500">{feature.description}</p>
+                      <h3 className="mt-8 text-lg font-medium text-white tracking-tight">{feature.name}</h3>
+                      <p className="mt-5 text-base text-gray-400">{feature.description}</p>
                     </div>
                   </div>
                 </div>
@@ -86,32 +87,32 @@ export default function Home() {
       </div>
       
       {/* Testimonials Section */}
-      <div className="bg-gray-50 py-12 sm:py-16 lg:py-20">
+      <div className="bg-gray-800 py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
               What Our Users Say
             </h2>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+            <p className="mt-4 max-w-2xl text-xl text-gray-400 mx-auto">
               Hear from people who have used our platform to understand their health
             </p>
           </div>
           <div className="mt-12">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((testimonial, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-md p-6">
+                <div key={index} className="card-dark p-6 hover-lift">
                   <div className="flex items-center mb-4">
-                    <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
-                      <span className="text-primary-800 font-bold text-lg">
+                    <div className="h-12 w-12 rounded-full bg-primary-900 flex items-center justify-center">
+                      <span className="text-primary-300 font-bold text-lg">
                         {testimonial.author.charAt(0)}
                       </span>
                     </div>
                     <div className="ml-4">
-                      <h4 className="text-lg font-bold">{testimonial.author}</h4>
-                      <p className="text-gray-500">{testimonial.role}</p>
+                      <h4 className="text-lg font-bold text-white">{testimonial.author}</h4>
+                      <p className="text-gray-400">{testimonial.role}</p>
                     </div>
                   </div>
-                  <p className="text-gray-600 italic">"{testimonial.content}"</p>
+                  <p className="text-gray-300 italic">"{testimonial.content}"</p>
                 </div>
               ))}
             </div>
@@ -120,7 +121,7 @@ export default function Home() {
       </div>
       
       {/* CTA Section */}
-      <div className="bg-primary-700">
+      <div className="bg-gradient-to-r from-primary-900 to-primary-800">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
           <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
             <span className="block">Ready to understand your health?</span>
@@ -128,20 +129,21 @@ export default function Home() {
           </h2>
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
             <div className="inline-flex rounded-md shadow">
-              <a
+              <Link
                 href="/upload"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50"
+                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-gray-900 bg-primary-400 hover:bg-primary-500 hover-lift"
               >
-                Get Started
-              </a>
+                <FiUpload className="mr-2" />
+                Upload Your Report
+              </Link>
             </div>
             <div className="ml-3 inline-flex rounded-md shadow">
-              <a
+              <Link
                 href="/how-it-works"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-500"
+                className="inline-flex items-center justify-center px-5 py-3 border border-gray-700 text-base font-medium rounded-md text-gray-200 bg-gray-800 hover:bg-gray-700"
               >
                 Learn More
-              </a>
+              </Link>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { FiAlertCircle, FiCheckCircle, FiInfo } from 'react-icons/fi';
+import { FiAlertCircle, FiCheckCircle, FiInfo, FiActivity, FiList, FiBook } from 'react-icons/fi';
 
 // Register Chart.js components
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -11,7 +11,7 @@ export default function ResultsDashboard({ results }) {
 
   if (!results || Object.keys(results).length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 text-gray-300">
         <p>No results to display. Please upload your blood test results.</p>
       </div>
     );
@@ -59,13 +59,18 @@ export default function ResultsDashboard({ results }) {
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          color: 'rgba(229, 231, 235, 0.9)' // text-gray-200
+        }
       },
       title: {
         display: true,
         text: 'Your Blood Test Results',
+        color: 'rgba(229, 231, 235, 0.9)' // text-gray-200
       },
       tooltip: {
         callbacks: {
@@ -90,7 +95,21 @@ export default function ResultsDashboard({ results }) {
     scales: {
       y: {
         beginAtZero: true,
+        grid: {
+          color: 'rgba(75, 85, 99, 0.2)' // text-gray-600 with low opacity
+        },
+        ticks: {
+          color: 'rgba(209, 213, 219, 0.8)' // text-gray-300
+        }
       },
+      x: {
+        grid: {
+          color: 'rgba(75, 85, 99, 0.2)' // text-gray-600 with low opacity
+        },
+        ticks: {
+          color: 'rgba(209, 213, 219, 0.8)' // text-gray-300
+        }
+      }
     },
   };
 
@@ -188,6 +207,7 @@ export default function ResultsDashboard({ results }) {
         (results.triglycerides && results.triglycerides.status !== 'normal')) {
       recommendations.push({
         category: 'Diet',
+        icon: FiBook,
         items: [
           'Increase intake of soluble fiber (oats, beans, fruits)',
           'Reduce saturated fats and trans fats',
@@ -198,6 +218,7 @@ export default function ResultsDashboard({ results }) {
       
       recommendations.push({
         category: 'Lifestyle',
+        icon: FiActivity,
         items: [
           'Aim for at least 150 minutes of moderate exercise weekly',
           'Maintain a healthy weight',
@@ -211,6 +232,7 @@ export default function ResultsDashboard({ results }) {
     if (results.glucose && results.glucose.status !== 'normal') {
       recommendations.push({
         category: 'Blood Sugar Management',
+        icon: FiActivity,
         items: [
           'Monitor carbohydrate intake',
           'Choose complex carbohydrates over simple sugars',
@@ -223,6 +245,7 @@ export default function ResultsDashboard({ results }) {
     // General recommendations
     recommendations.push({
       category: 'General Health',
+      icon: FiCheckCircle,
       items: [
         'Stay hydrated by drinking plenty of water',
         'Aim for 7-9 hours of quality sleep',
@@ -237,82 +260,138 @@ export default function ResultsDashboard({ results }) {
   const recommendations = generateRecommendations();
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="border-b border-gray-200">
+    <div className="card-dark p-6">
+      <div className="border-b border-gray-700">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('overview')}
             className={`${
               activeTab === 'overview'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
           >
+            <FiActivity className="mr-2" />
             Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('details')}
-            className={`${
-              activeTab === 'details'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-          >
-            Detailed Results
           </button>
           <button
             onClick={() => setActiveTab('insights')}
             className={`${
               activeTab === 'insights'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
           >
-            Insights & Recommendations
+            <FiInfo className="mr-2" />
+            Insights
+          </button>
+          <button
+            onClick={() => setActiveTab('recommendations')}
+            className={`${
+              activeTab === 'recommendations'
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-500'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+          >
+            <FiList className="mr-2" />
+            Recommendations
           </button>
         </nav>
       </div>
 
-      <div className="mt-6">
+      <div className="py-6">
         {activeTab === 'overview' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900">Results Overview</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                A visual representation of your blood test results
-              </p>
-            </div>
+          <div className="space-y-8">
+            <h2 className="text-xl font-bold text-white">Blood Test Overview</h2>
+            
             <div className="h-80">
               <Bar data={chartData} options={chartOptions} />
             </div>
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {insights.slice(0, 2).map((insight, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-md ${
-                    insight.type === 'warning'
-                      ? 'bg-yellow-50'
-                      : insight.type === 'success'
-                      ? 'bg-green-50'
-                      : 'bg-blue-50'
+            
+            <div className="mt-8">
+              <h3 className="text-lg font-medium text-white mb-4">Detailed Results</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead>
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Marker</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Your Value</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Reference Range</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-700">
+                    {Object.entries(results).map(([key, item]) => (
+                      <tr key={key} className="hover:bg-gray-800">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200">
+                          {key.charAt(0).toUpperCase() + key.slice(1)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {item.value} {item.unit}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {item.reference}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${item.status === 'normal' 
+                              ? 'bg-green-100 text-green-800' 
+                              : item.status === 'borderline' 
+                                ? 'bg-yellow-100 text-yellow-800' 
+                                : item.status === 'high' 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : 'bg-blue-100 text-blue-800'}`}>
+                            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'insights' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-white">Key Insights</h2>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              {insights.map((insight, index) => (
+                <div 
+                  key={index} 
+                  className={`border rounded-lg p-4 ${
+                    insight.type === 'warning' 
+                      ? 'border-yellow-500 bg-yellow-500/10' 
+                      : insight.type === 'success' 
+                        ? 'border-green-500 bg-green-500/10' 
+                        : 'border-blue-500 bg-blue-500/10'
                   }`}
                 >
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <insight.icon
-                        className={`h-5 w-5 ${
-                          insight.type === 'warning'
-                            ? 'text-yellow-400'
-                            : insight.type === 'success'
-                            ? 'text-green-400'
-                            : 'text-blue-400'
-                        }`}
-                        aria-hidden="true"
-                      />
+                  <div className="flex items-start">
+                    <div className={`flex-shrink-0 ${
+                      insight.type === 'warning' 
+                        ? 'text-yellow-400' 
+                        : insight.type === 'success' 
+                          ? 'text-green-400' 
+                          : 'text-blue-400'
+                    }`}>
+                      <insight.icon className="h-6 w-6" />
                     </div>
                     <div className="ml-3">
-                      <h3 className="text-sm font-medium text-gray-800">{insight.title}</h3>
-                      <p className="mt-2 text-sm text-gray-700">{insight.description}</p>
+                      <h3 className={`text-sm font-medium ${
+                        insight.type === 'warning' 
+                          ? 'text-yellow-300' 
+                          : insight.type === 'success' 
+                            ? 'text-green-300' 
+                            : 'text-blue-300'
+                      }`}>
+                        {insight.title}
+                      </h3>
+                      <div className="mt-2 text-sm text-gray-300">
+                        <p>{insight.description}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -321,136 +400,37 @@ export default function ResultsDashboard({ results }) {
           </div>
         )}
 
-        {activeTab === 'details' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900">Detailed Results</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Comprehensive breakdown of all your test markers
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Test
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Your Result
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Reference Range
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {Object.entries(results).map(([key, value]) => (
-                    <tr key={key}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {value.value} {value.unit}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {value.reference}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            value.status === 'normal'
-                              ? 'bg-green-100 text-green-800'
-                              : value.status === 'borderline'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : value.status === 'high' || value.status === 'low'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {value.status.charAt(0).toUpperCase() + value.status.slice(1)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'insights' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900">Insights & Recommendations</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                AI-generated insights and personalized recommendations based on your results
-              </p>
+        {activeTab === 'recommendations' && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-white">Personalized Recommendations</h2>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              {recommendations.map((recommendation, index) => (
+                <div key={index} className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+                  <h3 className="text-lg font-medium text-white flex items-center">
+                    {recommendation.icon && <recommendation.icon className="mr-2 text-primary-400" />}
+                    {recommendation.category}
+                  </h3>
+                  <ul className="mt-4 space-y-2">
+                    {recommendation.items.map((item, itemIndex) => (
+                      <li key={itemIndex} className="flex items-start">
+                        <span className="text-primary-400 mr-2">•</span>
+                        <span className="text-sm text-gray-300">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
             
-            <div className="mb-8">
-              <h4 className="text-md font-medium text-gray-800 mb-4">Key Insights</h4>
-              <div className="space-y-4">
-                {insights.map((insight, index) => (
-                  <div
-                    key={index}
-                    className={`p-4 rounded-md ${
-                      insight.type === 'warning'
-                        ? 'bg-yellow-50'
-                        : insight.type === 'success'
-                        ? 'bg-green-50'
-                        : 'bg-blue-50'
-                    }`}
-                  >
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <insight.icon
-                          className={`h-5 w-5 ${
-                            insight.type === 'warning'
-                              ? 'text-yellow-400'
-                              : insight.type === 'success'
-                              ? 'text-green-400'
-                              : 'text-blue-400'
-                          }`}
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-gray-800">{insight.title}</h3>
-                        <p className="mt-2 text-sm text-gray-700">{insight.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+              <div className="flex items-center">
+                <FiInfo className="h-5 w-5 text-gray-400" />
+                <p className="ml-3 text-sm text-gray-300">
+                  These recommendations are generated based on your test results and general health guidelines. 
+                  Always consult with a healthcare professional before making significant changes to your diet, exercise routine, or medication.
+                </p>
               </div>
-            </div>
-            
-            <div>
-              <h4 className="text-md font-medium text-gray-800 mb-4">Recommendations</h4>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                {recommendations.map((rec, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
-                    <h5 className="text-sm font-semibold text-gray-900 mb-3">{rec.category}</h5>
-                    <ul className="space-y-2">
-                      {rec.items.map((item, itemIndex) => (
-                        <li key={itemIndex} className="flex items-start">
-                          <span className="text-primary-500 mr-2">•</span>
-                          <span className="text-sm text-gray-600">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="mt-8 bg-gray-50 p-4 rounded-md">
-              <p className="text-sm text-gray-500">
-                <strong>Disclaimer:</strong> These insights and recommendations are generated by AI and are not a substitute for professional medical advice. Always consult with a healthcare provider before making any changes to your health regimen.
-              </p>
             </div>
           </div>
         )}
