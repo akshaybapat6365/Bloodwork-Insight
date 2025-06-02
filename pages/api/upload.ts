@@ -2,6 +2,8 @@ import multer from 'multer';
 import { NextApiRequest, NextApiResponse } from 'next';
 import path from 'path';
 import fs from 'fs';
+import pdf from 'pdf-parse';
+import { createWorker } from 'tesseract.js';
 
 // Configure multer for file upload
 const upload = multer({
@@ -29,6 +31,7 @@ const upload = multer({
 // Ensure uploads directory exists
 const uploadDir = './uploads';
 if (!fs.existsSync(uploadDir)) {
+  // Note: fs.mkdirSync might not be suitable for all serverless environments.
   fs.mkdirSync(uploadDir);
 }
 
@@ -58,26 +61,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await runMiddleware(req, res, upload.single('file'));
 
-    const file = (req as any).file;
+    const file = (req as any).file; // TODO: type this properly
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Return the file information
-    return res.status(200).json({
-      message: 'File uploaded successfully',
-      file: {
-        filename: file.filename,
-        path: file.path,
-        size: file.size,
-        mimetype: file.mimetype
-      }
-    });
+    let extractedText = '';
 
-  } catch (error) {
-    console.error('Upload error:', error);
+    try {
+      if (file.mimetype === 'application/pdf') {
+        const dataBuffer = fs.readFileSync(file.path);
+        const data = await pdf(dataBuffer);
+        extractedText = data.text;
+      } else if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        const worker = await createWorker();
+        await worker.loadLanguage('eng');
+        await worker.initialize('eng');
+        const { data: { text } } = await worker.recognize(file.path);
+        extractedText = text;
+        await worker.terminate();
+      } else {
+        fs.unlinkSync(file.path); // Clean up unsupported file
+        return res.status(400).json({ error: 'Unsupported file type for text extraction. Only PDF, JPEG, and PNG are supported.' });
+      }
+
+      // Clean up the uploaded file
+      fs.unlinkSync(file.path);
+
+      return res.status(200).json({
+        message: 'File processed successfully',
+        filename: file.originalname, // Using originalname for user reference
+        extractedText,
+      });
+
+    } catch (extractionError) {
+      console.error('Text extraction error:', extractionError);
+      // Clean up the uploaded file in case of extraction error
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+      return res.status(500).json({
+        error: extractionError instanceof Error ? extractionError.message : 'An error occurred during text extraction'
+      });
+    }
+
+  } catch (uploadError) {
+    console.error('Upload error:', uploadError);
+    // Note: file might not exist here if upload.single('file') itself failed.
+    // If it does, multer usually handles cleanup of the file.
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'An error occurred during upload'
+      error: uploadError instanceof Error ? uploadError.message : 'An error occurred during upload'
     });
   }
 } 

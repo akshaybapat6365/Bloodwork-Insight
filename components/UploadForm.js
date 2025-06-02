@@ -4,16 +4,18 @@ import { FiUpload, FiFile, FiX, FiLoader, FiCheckCircle, FiAlertCircle } from 'r
 
 export default function UploadForm({ onAnalysisComplete }) {
   const [file, setFile] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
+  // isUploading is effectively replaced by uploadStage !== 'idle' && uploadStage !== 'complete' && uploadStage !== 'error'
   const [uploadError, setUploadError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStage, setUploadStage] = useState('idle'); // idle, uploading, analyzing, complete, error
+  // New stages: idle, selected, uploading_file, extracting_text, analyzing_data, complete, error
+  const [uploadStage, setUploadStage] = useState('idle');
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length > 0) {
       setFile(acceptedFiles[0]);
       setUploadError('');
-      setUploadStage('idle');
+      setUploadProgress(0);
+      setUploadStage('selected'); // File is selected, ready for upload
     }
   }, []);
 
@@ -37,82 +39,72 @@ export default function UploadForm({ onAnalysisComplete }) {
       return;
     }
 
-    setIsUploading(true);
+    setUploadError('');
     setUploadProgress(0);
-    setUploadStage('uploading');
-    
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prevProgress) => {
-        const newProgress = prevProgress + 5;
-        if (newProgress >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return newProgress;
-      });
-    }, 300);
+    setUploadStage('uploading_file');
+
+    const formData = new FormData();
+    formData.append('file', file);
 
     try {
-      // Create form data
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // In a real app, you would send this to your API
-      // const response = await fetch('/api/upload', {
-      //   method: 'POST',
-      //   body: formData,
-      // });
-      
-      // if (!response.ok) {
-      //   throw new Error('Upload failed');
-      // }
-      
-      // const data = await response.json();
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Simulate successful response
-      const mockData = {
-        success: true,
-        fileId: 'mock-file-id-123',
-        message: 'File uploaded successfully',
-      };
-
-      // Clear the progress interval
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      setUploadStage('analyzing');
-      
-      // Simulate analysis delay
-      setTimeout(() => {
-        setIsUploading(false);
-        setUploadStage('complete');
-        
-        // Pass the analysis results to the parent component
-        if (onAnalysisComplete) {
-          onAnalysisComplete({
-            cholesterol: { value: 185, unit: 'mg/dL', status: 'normal', reference: '< 200' },
-            hdl: { value: 55, unit: 'mg/dL', status: 'normal', reference: '> 40' },
-            ldl: { value: 110, unit: 'mg/dL', status: 'normal', reference: '< 130' },
-            triglycerides: { value: 150, unit: 'mg/dL', status: 'borderline', reference: '< 150' },
-            glucose: { value: 95, unit: 'mg/dL', status: 'normal', reference: '70-99' },
-            hemoglobin: { value: 14.2, unit: 'g/dL', status: 'normal', reference: '13.5-17.5' },
-            whiteCellCount: { value: 7500, unit: '/µL', status: 'normal', reference: '4500-11000' },
-            redCellCount: { value: 5.2, unit: 'million/µL', status: 'normal', reference: '4.5-5.9' },
-            platelets: { value: 250000, unit: '/µL', status: 'normal', reference: '150000-450000' },
-            creatinine: { value: 0.9, unit: 'mg/dL', status: 'normal', reference: '0.7-1.3' },
-            // Add more mock results as needed
-          });
+      // Step 1: Upload file and extract text
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
         }
-      }, 2000);
+      });
       
+      // Simulate progress for extraction if direct progress isn't available
+      // For fetch, direct upload progress isn't standard, so we'll just set to 100 after upload call
+      setUploadProgress(100); // Mark upload part as complete
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'File upload failed with status: ' + uploadResponse.status }));
+        throw new Error(errorData.error || 'File upload failed');
+      }
+
+      const uploadResult = await uploadResponse.json();
+
+      if (!uploadResult.extractedText) {
+        setUploadError(uploadResult.error || 'Text extraction failed. The file might be corrupted or an unsupported type.');
+        setUploadStage('error');
+        return;
+      }
+      
+      setUploadStage('analyzing_data'); // Text extracted, now analyzing with AI
+      // Reset progress for the next stage if desired, or keep it at 100 to show previous step completion
+      // For simplicity, we'll leave progress at 100 and rely on stage text
+
+      // Step 2: Send extracted text for AI analysis
+      const analysisResponse = await fetch('/api/ai-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          extractedText: uploadResult.extractedText,
+          filename: uploadResult.filename, // Pass filename for context
+        }),
+      });
+
+      if (!analysisResponse.ok) {
+        const errorData = await analysisResponse.json().catch(() => ({ error: 'AI analysis failed with status: ' + analysisResponse.status }));
+        throw new Error(errorData.error || 'AI analysis failed');
+      }
+
+      const analysisResult = await analysisResponse.json();
+      
+      setUploadStage('complete');
+      if (onAnalysisComplete) {
+        onAnalysisComplete(analysisResult);
+      }
+
     } catch (error) {
-      console.error('Upload error:', error);
-      setUploadError('Failed to upload file. Please try again.');
-      clearInterval(progressInterval);
-      setIsUploading(false);
+      console.error('Processing error:', error);
+      setUploadError(error.message || 'An unexpected error occurred. Please try again.');
       setUploadStage('error');
     }
   };
@@ -126,18 +118,24 @@ export default function UploadForm({ onAnalysisComplete }) {
 
   const getStageText = () => {
     switch (uploadStage) {
-      case 'uploading':
+      case 'selected':
+        return 'File selected. Ready to analyze.';
+      case 'uploading_file':
         return 'Uploading your file...';
-      case 'analyzing':
-        return 'Analyzing your bloodwork...';
+      case 'extracting_text': // This stage might be very quick, covered by uploading_file or analyzing_data
+        return 'Extracting text from file...';
+      case 'analyzing_data':
+        return 'AI is analyzing your bloodwork...';
       case 'complete':
         return 'Analysis complete!';
       case 'error':
-        return 'Upload failed';
+        return uploadError || 'An error occurred.'; // Display specific error
       default:
-        return '';
+        return 'Select a file to begin.';
     }
   };
+  
+  const isProcessing = uploadStage === 'uploading_file' || uploadStage === 'extracting_text' || uploadStage === 'analyzing_data';
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -148,9 +146,9 @@ export default function UploadForm({ onAnalysisComplete }) {
             {...getRootProps()}
             className={`border-2 border-dashed rounded-lg p-6 transition duration-150 ease-in-out ${
               isDragActive ? 'border-primary-500 bg-gray-800/50' : 'border-gray-600 hover:border-primary-400'
-            } ${file ? 'bg-gray-800/30' : ''}`}
+            } ${file ? 'bg-gray-800/30' : ''} ${isProcessing ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           >
-            <input {...getInputProps()} />
+            <input {...getInputProps()} disabled={isProcessing} />
             {file ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -160,16 +158,18 @@ export default function UploadForm({ onAnalysisComplete }) {
                     <p className="text-sm text-gray-400">{(file.size / 1024).toFixed(2)} KB</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFile();
-                  }}
-                  className="text-gray-400 hover:text-gray-200"
-                >
-                  <FiX className="h-5 w-5" />
-                </button>
+                {!isProcessing && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering dropzone
+                      removeFile();
+                    }}
+                    className="text-gray-400 hover:text-gray-200"
+                  >
+                    <FiX className="h-5 w-5" />
+                  </button>
+                )}
               </div>
             ) : (
               <div className="text-center">
@@ -183,7 +183,7 @@ export default function UploadForm({ onAnalysisComplete }) {
               </div>
             )}
           </div>
-          {uploadError && (
+          {uploadError && uploadStage === 'error' && (
             <div className="flex items-center text-sm text-red-400 mt-2">
               <FiAlertCircle className="mr-1 h-4 w-4" />
               {uploadError}
@@ -192,24 +192,28 @@ export default function UploadForm({ onAnalysisComplete }) {
         </div>
 
         {/* Upload Progress Indicator */}
-        {isUploading && (
+        {(isProcessing || uploadStage === 'complete' || uploadStage === 'error') && uploadStage !== 'idle' && uploadStage !== 'selected' && (
           <div className="mt-6 space-y-3">
             <div className="flex justify-between items-center text-sm text-gray-300">
               <span>{getStageText()}</span>
-              <span>{uploadProgress}%</span>
+              {(uploadStage === 'uploading_file' || uploadStage === 'extracting_text') && <span>{uploadProgress}%</span>}
+              {uploadStage === 'complete' && <FiCheckCircle className="text-green-500 h-5 w-5" />}
+              {uploadStage === 'error' && <FiAlertCircle className="text-red-500 h-5 w-5" />}
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2.5">
-              <div
-                className={`h-2.5 rounded-full ${
-                  uploadStage === 'error' ? 'bg-red-500' : uploadStage === 'complete' ? 'bg-green-500' : 'bg-primary-500'
-                }`}
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
-            {uploadStage === 'analyzing' && (
+            {(uploadStage === 'uploading_file' || uploadStage === 'extracting_text') && (
+              <div className="w-full bg-gray-700 rounded-full h-2.5">
+                <div
+                  className={`h-2.5 rounded-full ${
+                    uploadStage === 'error' ? 'bg-red-500' : uploadStage === 'complete' ? 'bg-green-500' : 'bg-primary-500'
+                  }`}
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            )}
+            {uploadStage === 'analyzing_data' && (
               <div className="flex items-center justify-center space-x-2 text-primary-400 mt-4">
                 <FiLoader className="animate-spin h-5 w-5" />
-                <span>Advanced AI analysis in progress...</span>
+                <span>Advanced AI analysis in progress... This may take a moment.</span>
               </div>
             )}
           </div>
@@ -218,12 +222,12 @@ export default function UploadForm({ onAnalysisComplete }) {
         <div className="flex justify-center">
           <button
             type="submit"
-            disabled={isUploading || !file}
+            disabled={isProcessing || !file || uploadStage === 'complete'}
             className={`btn btn-primary py-3 px-8 ${
-              isUploading || !file ? 'opacity-50 cursor-not-allowed' : ''
+              (isProcessing || !file || uploadStage === 'complete') ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            {isUploading ? 'Processing...' : 'Analyze Results'}
+            {isProcessing ? 'Processing...' : (uploadStage === 'complete' ? 'Analysis Done' : 'Analyze Results')}
           </button>
         </div>
 

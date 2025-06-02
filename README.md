@@ -35,7 +35,7 @@ yarn install
 
 3. Create a `.env.local` file in the root directory and add your API keys:
 ```
-OPENAI_API_KEY=your_openai_api_key
+GOOGLE_API_KEY=your_google_api_key
 # Add any other required API keys
 ```
 
@@ -58,7 +58,7 @@ This application can be easily deployed to Vercel:
 
 - Next.js - React framework
 - Tailwind CSS - Styling
-- OpenAI API - AI analysis
+- Google Generative AI SDK - AI analysis
 - Chart.js - Data visualization
 - React Dropzone - File uploads
 
